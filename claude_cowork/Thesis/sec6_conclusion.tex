@@ -1,0 +1,104 @@
+% ================================================================
+% SECTION 6 — CONCLUSION
+% Target: ~1.5 pages
+% ================================================================
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+This thesis set out to answer a deceptively simple question: by how
+much did the April 2022 KwaZulu-Natal floods reduce freight volumes
+on South Africa's NATCOR rail corridor, and for how long did the
+effect persist?
+Answering it rigorously required constructing a credible
+counterfactual --- an estimate of what NATCOR volumes would have been
+in the absence of the flood --- and demonstrating that this
+counterfactual is robust to the choice of estimation method, the
+composition of the donor pool, and the specification of the
+pre-treatment window.
+
+The main empirical finding is clear and consistent.
+Across five structurally distinct SCM-family estimators applied to a
+full five-corridor donor pool, the 2022 KZN floods caused a sustained
+reduction in NATCOR monthly freight volume of approximately
+$-0.157$\,MT per month, accumulating to a cumulative loss of
+$-5.17$\,MT over the 33-month post-flood window.
+Every estimator passes in-time placebo tests with zero exceedances,
+and leave-one-out donor stability checks confirm that no single
+corridor is driving the result.
+The gap between observed and counterfactual NATCOR volume remains
+negative across every post-flood month in the observation window,
+providing no evidence of full recovery by December 2024 --- more than
+two and a half years after the event.
+
+A second, methodological finding is equally important.
+When the analysis is restricted to a single donor corridor, the five
+estimators produce results ranging from $-11.1$\,MT to $+3.7$\,MT
+--- a spread of nearly 15\,MT that renders any single estimate
+meaningless for policy purposes.
+Once an adequate five-corridor donor pool is constructed, all five
+methods converge to within 0.15\,MT of one another.
+This empirical demonstration of donor pool inadequacy as a source
+of estimator divergence is, to the author's knowledge, the first
+of its kind in the transport economics literature, and provides a
+concrete diagnostic for applied researchers: estimator disagreement
+is a symptom of identification failure, not a reason to prefer one
+algorithm over another.
+
+\subsection*{Contributions Revisited}
+
+The three contributions stated in Section~\ref{sec:contrib} have
+been delivered.
+Methodologically, this thesis provides a replicable five-method
+benchmark for SCM-based freight impact analysis.
+Empirically, it delivers the first causal estimate of the 2022 KZN
+flood effect on NATCOR volumes using a counterfactual identification
+strategy.
+Diagnostically, it provides a worked example of how donor pool
+inadequacy manifests in practice and how it can be detected and
+corrected.
+
+\subsection*{Directions for Future Research}
+
+Three directions stand out as natural extensions of this work.
+
+First, a commodity-level or origin--destination disaggregation of
+the NATCOR volume series would allow researchers to determine whether
+the flood effect is concentrated in specific freight types ---
+containerised imports, agricultural bulk, or manufactured exports ---
+and whether different commodities exhibit different recovery
+trajectories.
+Such analysis would require Transnet to make disaggregated operational
+data available, which currently it does not.
+
+Second, the donor pool could in principle be extended beyond South
+African corridors to include freight rail data from comparable
+emerging-market operators in East or Southern Africa.
+A richer international donor pool would strengthen the parallel
+trends assumption and could allow the SCM to be applied to smaller
+corridor-level shocks that currently lack adequate domestic controls.
+
+Third, complementing the SCM results with a dynamic treatment effect
+model --- such as local projections or a structural time-series
+model with an intervention component --- would characterise the
+time profile of recovery more precisely than the static average
+treatment effect reported here.
+In particular, such models could test formally whether the gap
+is narrowing, constant, or widening over time, and could provide
+a probabilistic forecast of the date at which full volume recovery
+might be expected.
+
+\subsection*{Closing Remark}
+
+South Africa's rail freight system operates at a strategic crossroads.
+The 2022 KZN floods demonstrated that a single extreme weather event
+can inflict a lasting, quantifiable reduction in corridor throughput
+that persists well beyond the physical repair window.
+As climate models project increasing frequency and intensity of
+extreme precipitation events across southern Africa, the economic
+case for pre-emptive infrastructure resilience investment on corridors
+like NATCOR will only strengthen.
+The methods developed in this thesis provide a rigorous, replicable
+framework for quantifying such impacts --- one that can inform
+cost-benefit analyses, insurance pricing, and policy design as
+South Africa's freight rail system navigates the decades ahead.

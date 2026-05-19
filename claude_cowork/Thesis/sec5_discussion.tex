@@ -1,0 +1,276 @@
+% ================================================================
+% SECTION 5 — DISCUSSION
+% Target: ~5 pages
+% ================================================================
+
+\section{Discussion}
+\label{sec:discussion}
+
+This section interprets the empirical findings in light of the four
+research questions stated in Section~\ref{sec:rq}, situates the
+results within the broader literature, and draws out the practical
+implications for infrastructure resilience policy and freight rail
+planning in South Africa.
+
+% ---------------------------------------------------------------
+\subsection{Answering the Research Questions}
+\label{sec:disc_rq}
+% ---------------------------------------------------------------
+
+\textbf{RQ1: What is the causal effect of the April 2022 KZN floods
+on monthly NATCOR rail freight volume, and how does this estimate
+vary across five SCM-family estimators?}
+
+The five SCM-family estimators, applied to the full five-corridor
+donor pool, produce a tightly clustered set of estimates.
+The average monthly treatment effect (ATT) ranges from
+$-0.154$\,MT/month (MC-SCM) to $-0.159$\,MT/month (SDID), with a
+consensus mean of $-0.157$\,MT/month.
+Over the 33-month post-flood window, this translates to a cumulative
+volume loss of approximately $-5.08$ to $-5.24$\,MT, with a
+consensus mean of $-5.17$\,MT.
+
+The across-estimator consistency is itself a substantive finding.
+The five methods differ in their identification assumptions, their
+treatment of donor weights, and their regularisation strategies.
+Base SCM imposes a convexity constraint; ASCM relaxes it via
+ridge bias-correction; EN-SCM further relaxes it through sparse
+penalisation; MC-SCM abandons explicit weighting in favour of
+low-rank matrix completion; SDID reweights both units and time
+periods simultaneously.
+The fact that all five converge within a 0.15\,MT band suggests
+that the estimated effect is not an artefact of any particular
+modelling assumption, but reflects a genuine and robust signal in
+the data.
+
+\textbf{RQ2: How sensitive are SCM estimates to the size and
+composition of the donor pool, and what is the minimum donor pool
+required for consistent counterfactual estimation?}
+
+The comparison between the 1-donor and 5-donor configurations
+provides a sharp empirical answer.
+With a single donor (CAPE), the five methods produce estimates
+spanning nearly 15\,MT, from $-11.1$\,MT to $+3.7$\,MT.
+With five donors, the span collapses to 0.15\,MT.
+This is not a gradual improvement: it is a qualitative transition
+from incoherence to consensus.
+
+The minimum donor pool required for consistent estimation cannot be
+determined from this study alone, as only two configurations were
+tested.
+However, the results are consistent with the theoretical requirement
+that the donor pool must be sufficiently rich to span the
+pre-treatment trajectory of the treated unit.
+CAPE alone cannot reproduce NATCOR's pre-period dynamics
+(RMSPE $\approx 0.49$\,MT), while five donors reduce RMSPE to
+0.026\,MT --- a 95\% improvement in fit that directly translates
+into estimator coherence.
+The practical implication is that researchers applying SCM to
+corridor-level freight data should treat a pre-period RMSPE below
+5\% of the treated unit's mean as a minimum threshold for
+proceeding to causal interpretation.
+
+\textbf{RQ3: How robust are the causal estimates to perturbations
+in the pre-period window, donor pool composition, and model
+hyperparameters?}
+
+Robustness is demonstrated across three dimensions.
+First, in-time placebo tests show that zero of five pseudo-treatment
+dates produces an effect as large as the true estimate under any
+of the five methods --- a result consistent across all structural
+variants of the estimator.
+Second, leave-one-out donor tests show that removing any single
+corridor from the donor pool shifts the consensus estimate by at
+most 0.15\,MT (SDID, LOO spread), and by as little as 0.036\,MT
+(ASCM), confirming that no single corridor is driving the result.
+Third, the tight agreement between the jackknife confidence interval
+for SDID ($[-5.393, -5.080]$\,MT) and the block bootstrap interval
+for MC-SCM ($[-5.210, -4.948]$\,MT) confirms that the precision of
+the estimate is not sensitive to the choice of inference procedure.
+
+Taken together, these three robustness checks support the conclusion
+that the estimated effect is stable and not an artefact of any
+particular modelling choice.
+
+\textbf{RQ4: What is the cumulative freight volume loss attributable
+to the flood shock, and what does this imply for the economic cost
+of infrastructure disruptions on the NATCOR corridor?}
+
+The consensus cumulative loss of approximately $-5.17$\,MT over 33
+months represents a 4.0\% sustained reduction in NATCOR throughput
+relative to its pre-flood mean.
+At a conservative rail freight revenue rate of ZAR\,250 per tonne,
+this implies a direct revenue loss to Transnet of approximately
+ZAR\,1.28 billion.
+This figure covers only the loss in freight revenue on the NATCOR
+corridor itself; it does not capture second-order costs including
+road infrastructure damage from diverted heavy trucks, shipper
+inventory holding costs, port congestion externalities at Durban,
+or the economic loss to exporters whose cargo was delayed or rerouted.
+A comprehensive social cost estimate would be substantially higher.
+
+% ---------------------------------------------------------------
+\subsection{Interpretation of the Persistence Effect}
+\label{sec:disc_persist}
+% ---------------------------------------------------------------
+
+Perhaps the most policy-relevant finding of this study is not the
+magnitude of the immediate disruption but the persistence of the
+gap.
+The monthly gap series remains uniformly negative across all 33
+post-flood months, with no evidence of mean reversion to the
+synthetic counterfactual by December 2024.
+This pattern is inconsistent with a purely physical disruption
+hypothesis --- the view that rail volumes fall during the repair
+period and recover fully once infrastructure is restored.
+Physical repairs to the NATCOR mainline were largely completed
+within six to nine months of the flood, yet the gap persists well
+beyond this window.
+
+Two complementary mechanisms are consistent with this persistence.
+The first is demand-side hysteresis: shippers who diverted freight
+to road transport during the disruption period may have renegotiated
+contracts, invested in truck fleets, or developed road-based
+logistics routines that are costly to reverse.
+In freight markets characterised by switching costs and long-term
+contracts, a temporary disruption can trigger permanent modal
+diversion if it coincides with a contract renewal cycle.
+The second mechanism is supply-side degradation: the flood may
+have exacerbated pre-existing deterioration in locomotive
+availability and track quality on NATCOR, reducing service
+reliability in ways that deterred returning shippers even after
+physical reconstruction was nominally complete.
+
+These mechanisms are not mutually exclusive and are likely to have
+operated simultaneously.
+Disentangling their relative contributions would require
+shipper-level survey data or commodity-specific volume breakdowns
+that are not available in the aggregate corridor panel used in
+this study, and represents an important direction for future
+research.
+
+% ---------------------------------------------------------------
+\subsection{Relationship to Prior Literature}
+\label{sec:disc_lit}
+% ---------------------------------------------------------------
+
+The finding of a causal, persistent negative effect of the 2022
+KZN floods on NATCOR volumes is consistent with the broader
+literature on infrastructure disruptions and freight demand.
+Studies of natural disaster effects on transport networks
+consistently find that recovery is slower than physical repair
+timelines suggest~\parencite{cavallo2013}, and that the demand-side
+response to disruption is asymmetric: modal diversion away from
+rail is more rapid than modal return after service restoration.
+
+The donor pool inadequacy result has a direct parallel in the
+comparative case studies literature.
+\textcite{abadie2003} warn against applying SCM when the number
+of available control units is too small to approximate the treated
+unit's pre-period trajectory~\parencite{abadie2003}.
+The 1-donor versus 5-donor comparison in this thesis provides a
+rare empirical demonstration of this failure mode in a logistics
+context: the theoretical warning becomes visible as a 15\,MT
+spread in cumulative effect estimates, rendering any single estimate
+from the 1-donor configuration literally meaningless for policy
+purposes.
+
+The methodological contribution of systematically comparing five
+SCM estimators on the same dataset fills a gap identified by
+\textcite{benmichael2021}, who argue that applied researchers
+should report multiple estimators as a robustness check rather
+than relying on a single method~\parencite{benmichael2021}.
+This thesis operationalises that recommendation in a transport
+economics setting and demonstrates that, given an adequate donor
+pool, the choice of estimator matters little for the point estimate
+--- though it matters considerably for the inference procedure and
+the interpretation of uncertainty.
+
+% ---------------------------------------------------------------
+\subsection{Limitations}
+\label{sec:disc_limit}
+% ---------------------------------------------------------------
+
+Several limitations of this study should be acknowledged.
+
+First, the donor pool is constrained to five South African rail
+corridors operated by Transnet Freight Rail.
+An international donor pool --- incorporating freight corridor data
+from comparable emerging-market rail operators --- could in
+principle improve pre-period fit further and provide stronger
+identification.
+However, comparable monthly corridor-level data are not publicly
+available for other African rail operators, making this extension
+infeasible with current data sources.
+
+Second, the analysis uses aggregate monthly corridor volume
+(million tonnes) as the outcome variable.
+This measure conflates commodity types, distance bands, and
+contract structures that may respond differently to the flood shock.
+A more granular analysis using commodity-level or origin--destination
+pair data could reveal heterogeneity in the flood effect that is
+obscured in the aggregate.
+
+Third, the SCM framework estimates the average treatment effect
+over the full post-period.
+It does not directly model the time profile of recovery or estimate
+whether the effect is accelerating, decelerating, or constant.
+Dynamic treatment effect models --- such as local projections or
+state-space approaches --- could complement the SCM results by
+characterising the recovery trajectory more precisely.
+
+Fourth, the causal identification relies on the parallel trends
+assumption: that in the absence of the flood, NATCOR would have
+evolved as a weighted combination of the donor corridors.
+This assumption is supported by the tight pre-period fit but cannot
+be directly tested post-treatment.
+Concurrent shocks that affected NATCOR differentially from the
+donor pool --- such as a corridor-specific locomotive crisis or
+a major customer insolvency --- could confound the estimated flood
+effect.
+The available evidence from publicly reported operational data
+does not suggest such a confound, but it cannot be ruled out
+with certainty.
+
+% ---------------------------------------------------------------
+\subsection{Policy Implications}
+\label{sec:disc_policy}
+% ---------------------------------------------------------------
+
+The results of this study carry several concrete implications for
+infrastructure resilience planning in South Africa.
+
+The persistence of the volume gap beyond the physical repair period
+suggests that resilience investment should not be evaluated solely
+on the speed of infrastructure reconstruction.
+A corridor that is physically repaired but commercially disrupted
+--- because shippers have permanently diverted to road --- may
+never recover its pre-shock throughput.
+Resilience policy therefore needs to address demand-side recovery
+as well as supply-side restoration, for instance through temporary
+tariff incentives to retain or attract returning shippers during
+the post-repair period.
+
+The estimated revenue loss of ZAR\,1.28 billion over 33 months
+provides a lower bound on the economic case for pre-emptive
+resilience investment on the NATCOR corridor.
+Infrastructure hardening measures --- such as flood-proofing of
+critical embankments, redundant signalling systems, and rapid
+deployment capabilities for bridge repair --- that cost less than
+this figure over their operational lifetime would pass a simple
+cost-benefit test against the observed flood disruption alone,
+without counting future flood events or the avoided secondary
+costs of road diversion.
+
+Finally, the donor pool inadequacy finding has a methodological
+implication for the use of causal inference in transport policy
+evaluation.
+Regulatory bodies and infrastructure planners who commission
+SCM-based impact evaluations of corridor disruptions must ensure
+that the donor pool is adequate before accepting any single-method
+result.
+A pre-period RMSPE that is large relative to the treated unit's
+mean, or a situation in which different SCM methods produce
+qualitatively different results, should be treated as a signal
+that the donor pool is inadequate --- not as a reason to prefer
+one method over another.

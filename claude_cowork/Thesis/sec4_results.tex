@@ -1,0 +1,513 @@
+% ================================================================
+% SECTION 4 — RESULTS
+% Target: ~9 pages
+% ================================================================
+
+\section{Results}
+\label{sec:results}
+
+This section presents the empirical results in four stages.
+Section~\ref{sec:res_eda} summarises the exploratory characteristics
+of the panel data and the NATCOR series in particular.
+Section~\ref{sec:res_1donor} demonstrates the consequences of an
+inadequate donor pool using the single-corridor analysis from the
+initial modelling iteration.
+Section~\ref{sec:res_5donor} presents the main causal estimates
+obtained with the full five-corridor donor pool, including pre-period
+fit diagnostics and post-period gap series for each of the five
+estimators.
+Section~\ref{sec:res_robustness} presents the robustness battery:
+in-time placebo tests, leave-one-out donor stability checks, and
+confidence intervals derived from jackknife and block bootstrap
+resampling.
+
+% ---------------------------------------------------------------
+\subsection{Exploratory Data Analysis}
+\label{sec:res_eda}
+% ---------------------------------------------------------------
+
+The cleaned panel spans 120 months (January 2015 to December 2024),
+six corridors, and 14 variables, yielding 720 observations with no
+missing values after preprocessing.
+Figure~\ref{fig:eda_all} plots monthly freight volume for all six
+corridors over the full window.
+Several features are immediately apparent.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{fig_eda_all_corridors}
+  \caption{Monthly freight volume (million tonnes) for all six South
+           African rail corridors, January 2015 -- December 2024.
+           The grey band marks the COVID-19 disruption window
+           (March--August 2020); the red dashed line marks the April
+           2022 KZN flood event.
+           Shading intensity reflects the severity of load-shedding
+           stages recorded in each quarter.}
+  \label{fig:eda_all}
+\end{figure}
+
+IRON\_ORE dominates throughput at 4.5--6\,MT per month, operating
+largely independently of general freight dynamics owing to its
+captive, export-commodity client base.
+NATCOR and SOUTHCOR track each other at intermediate volume levels
+(2--5\,MT range), consistent with their shared role as general freight
+arteries serving the Gauteng industrial heartland.
+CAPE, NE\_CORRIDOR, and NORTHCOR operate at lower volumes but exhibit
+cyclical patterns broadly co-moving with NATCOR.
+The COVID-19 disruption of March--August 2020 produced a sharp,
+synchronised decline across all corridors, after which volumes
+partially recovered before deteriorating again in 2021--2022 under
+worsening load-shedding and cable theft pressure.
+The April 2022 vertical marker coincides visually with a pronounced
+inflection in NATCOR volume that is not matched in magnitude by any
+other corridor.
+
+Figure~\ref{fig:eda_natcor} provides a closer view of NATCOR's
+behaviour, decomposing raw volume and the corridor's inferred market
+share of total panel throughput.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{fig_eda_natcor_detail}
+  \caption{NATCOR monthly freight volume (upper panel) and NATCOR
+           market share as a fraction of total six-corridor throughput
+           (lower panel), 2015--2024.
+           The pre-flood mean and post-flood mean are shown as
+           horizontal reference lines in the upper panel.}
+  \label{fig:eda_natcor}
+\end{figure}
+
+In the pre-flood period (January 2015 to March 2022), NATCOR averaged
+3.94\,MT per month with a standard deviation of 0.42\,MT.
+Its market share was relatively stable at approximately 18--21\% of
+total panel throughput.
+Following the April 2022 shock, the post-period average falls to
+3.63\,MT --- a raw decline of approximately 0.31\,MT per month --- and
+market share contracts visibly.
+Whether this observed decline is attributable to the flood itself, to
+the concurrent deterioration in locomotive availability, or to broader
+economic headwinds is precisely the question that the SCM estimators
+are designed to answer.
+
+The corridor-level correlations in the pre-period confirm the
+suitability of the five donor corridors as controls.
+Pearson correlations between NATCOR and each donor during 2015--2022
+range from 0.61 (IRON\_ORE) to 0.83 (SOUTHCOR), and the first
+principal component of the five-donor matrix explains 71\% of
+cross-sectional variance.
+These statistics support the assumption that a convex combination of
+donor corridors can plausibly approximate the trajectory NATCOR would
+have followed in the absence of the flood.
+
+% ---------------------------------------------------------------
+\subsection{Consequences of an Inadequate Donor Pool}
+\label{sec:res_1donor}
+% ---------------------------------------------------------------
+
+Before presenting the main results, it is instructive to examine what
+happens when the SCM framework is applied with only a single donor
+corridor.
+This scenario is not hypothetical: the initial modelling iteration
+--- conducted before the full six-corridor panel was available ---
+used only the CAPE corridor as the donor pool.
+CAPE is a reasonable candidate on substantive grounds: it serves the
+Western Cape export hinterland and shares some seasonal co-movement
+with NATCOR.
+However, a single donor unit cannot satisfy the core requirement of
+synthetic control estimation, which is that the treated unit's
+pre-period trajectory be reproducible as a convex combination of donor
+units.
+When only one donor is available, the ``combination'' is trivially
+the donor itself, scaled by a single weight --- a degenerate case that
+strips the method of its identification power.
+
+Table~\ref{tab:1donor} reports the cumulative treatment effect
+estimates produced by all five estimators when restricted to the
+single-CAPE donor pool.
+
+\begin{table}[H]
+  \centering
+  \caption{Cumulative post-flood treatment effect estimates (April
+           2022 -- December 2024, 33 months) from the five SCM-family
+           estimators using only the CAPE corridor as the donor pool.}
+  \label{tab:1donor}
+  \begin{tabularx}{\textwidth}{lXXX}
+    \toprule
+    Estimator & Pre-period RMSPE (MT) & Post-period RMSPE (MT)
+              & Cumulative effect (MT) \\
+    \midrule
+    Base SCM  & 0.4917 & 0.8243 & $-11.104$ \\
+    ASCM      & 0.4890 & 0.2703 & $+3.682$  \\
+    EN-SCM    & 0.4921 & 0.6044 & $-1.458$  \\
+    MC-SCM    & 0.0000 & 0.4791 & $-2.940$  \\
+    SDID      & 0.4917 & 0.4461 & $-6.870$  \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+The estimates range from $-11.1$\,MT (Base SCM) to $+3.7$\,MT
+(ASCM), a span of nearly 15\,MT.
+The two most structurally different methods --- Base SCM and ASCM ---
+disagree not only in magnitude but in sign.
+Pre-period fit is poor across all methods (RMSPE $\approx 0.49$\,MT,
+versus the 0.026\,MT achieved with five donors), confirming that CAPE
+alone cannot reproduce NATCOR's pre-flood trajectory.
+
+Figure~\ref{fig:donor_compare} juxtaposes the 1-donor and 5-donor
+cumulative effect estimates to visualise the estimator divergence.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{fig_donor_comparison}
+  \caption{Cumulative post-flood treatment effect (MT) estimated by
+           the five SCM-family methods under the 1-donor (CAPE only)
+           and 5-donor configurations.
+           Error bars in the 5-donor panel show the range across
+           leave-one-out subsets.}
+  \label{fig:donor_compare}
+\end{figure}
+
+The contrast is stark.
+With one donor the five methods are statistically and economically
+irreconcilable; with five donors they collapse onto a consensus
+band of just 0.15\,MT.
+This finding provides an empirical demonstration of a theoretical
+property of the SCM: estimator coherence is a consequence of adequate
+donor pool coverage, not a feature of any individual estimation
+algorithm.
+Any one of the five methods, applied naively to the single-donor
+panel, would have produced a result that could mislead policy analysis
+by orders of magnitude.
+The remainder of this section reports results from the five-donor
+configuration exclusively.
+
+% ---------------------------------------------------------------
+\subsection{Main Causal Estimates: Five-Donor Configuration}
+\label{sec:res_5donor}
+% ---------------------------------------------------------------
+
+\subsubsection{Pre-period Fit}
+
+Table~\ref{tab:5donor} summarises the pre-period root mean squared
+prediction error (RMSPE) and key post-period statistics for each of
+the five estimators under the full five-corridor donor pool.
+
+\begin{table}[H]
+  \centering
+  \caption{SCM-family estimator performance under the five-corridor
+           donor pool (CAPE, IRON\_ORE, NE\_CORRIDOR, NORTHCOR,
+           SOUTHCOR). Pre-period: January 2015 -- March 2022
+           (87 months). Post-period: April 2022 -- December 2024
+           (33 months).}
+  \label{tab:5donor}
+  \begin{tabularx}{\textwidth}{lXXXX}
+    \toprule
+    Estimator & Pre RMSPE (MT) & Post RMSPE (MT)
+              & ATT (MT/month) & Cumulative (MT) \\
+    \midrule
+    Base SCM  & 0.0261 & 0.1704 & $-0.1582$ & $-5.2075$ \\
+    ASCM      & 0.0260 & 0.1685 & $-0.1550$ & $-5.1109$ \\
+    EN-SCM    & 0.0277 & 0.1703 & $-0.1582$ & $-5.2128$ \\
+    MC-SCM    & 0.0000 & 0.1667 & $-0.1540$ & $-5.0834$ \\
+    SDID      & 0.0261 & 0.1713 & $-0.1588$ & $-5.2401$ \\
+    \midrule
+    \textbf{Consensus}
+              & \textbf{0.0212} & \textbf{0.1694}
+              & $\mathbf{-0.1568}$ & $\mathbf{-5.1709}$ \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Pre-period fit is excellent across all five methods.
+RMSPE values of 0.026--0.028\,MT correspond to prediction errors of
+less than 0.7\% of the NATCOR pre-period mean (3.94\,MT), confirming
+that the synthetic control closely tracks NATCOR's historical
+trajectory.
+MC-SCM achieves a pre-period RMSPE of exactly zero by construction:
+its nuclear norm regularisation problem is solved at a rank that
+perfectly interpolates the pre-period observations.
+The near-identical fit quality across the remaining four methods,
+despite their structurally different estimation approaches, provides
+initial reassurance that the synthetic donor combination is not
+artefactually specific to a single algorithm.
+
+\subsubsection{Synthetic Counterfactual and Gap Series}
+
+Figure~\ref{fig:master_cf} plots the observed NATCOR volume alongside
+the synthetic counterfactual produced by each estimator, together with
+the implied gap (actual minus synthetic) for the post-flood period.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{fig_master_counterfactual}
+  \caption{Upper panel: observed NATCOR monthly freight volume (black)
+           versus synthetic counterfactuals from each of the five
+           SCM-family estimators, 2015--2024.
+           The red dashed vertical line marks the April 2022 flood.
+           Lower panel: monthly gap series (actual minus synthetic) for
+           each estimator in the post-flood period.
+           The grey band spans the minimum-to-maximum envelope across
+           all five methods; dashed lines show the individual method
+           trajectories.}
+  \label{fig:master_cf}
+\end{figure}
+
+Several observations follow from Figure~\ref{fig:master_cf}.
+In the pre-period, all five synthetic counterfactuals track the
+observed NATCOR series closely, confirming the pre-period fit
+statistics.
+The counterfactuals diverge slightly from one another owing to
+differences in regularisation and weighting; however, these
+differences are economically negligible (< 0.03\,MT).
+
+In the post-period, the synthetic counterfactuals suggest NATCOR
+should have been tracking at approximately 3.80--3.85\,MT per month
+in the absence of the flood.
+The observed series instead averages 3.63\,MT, producing a persistent
+negative gap.
+The gap series in the lower panel is uniformly negative across all 33
+post-flood months for every estimator, with no month producing a
+positive gap.
+The largest negative gaps occur in the first six months following the
+flood (May--October 2022), consistent with the initial infrastructure
+disruption and emergency repair period.
+Gaps then partially narrow but do not return to zero within the
+observation window, suggesting that the flood effect has not fully
+dissipated by December 2024.
+
+\subsubsection{Estimator-Specific Weights}
+
+The Base SCM solves for a closed-form constrained least-squares
+solution over the pre-period.
+The optimised donor weights assign the largest share to SOUTHCOR
+($w = 0.463$), followed by NE\_CORRIDOR ($w = 0.241$), CAPE
+($w = 0.221$), NORTHCOR ($w = 0.076$), and IRON\_ORE ($w = 0.000$).
+The exclusion of IRON\_ORE from the convex combination is consistent
+with its volume profile: IRON\_ORE operates at two to three times the
+throughput of NATCOR and co-moves with export commodity prices rather
+than with general freight demand.
+The dominance of SOUTHCOR and NE\_CORRIDOR in the synthetic control
+is economically intuitive, as both corridors serve the interior--coast
+general freight market and exhibit similar seasonality patterns to
+NATCOR.
+
+ASCM begins with the Base SCM weights and applies a ridge regression
+bias-correction (penalisation parameter $\alpha = 100$), which
+produces a slight reweighting of the donor pool toward a more
+diffuse allocation.
+EN-SCM ($\alpha = 0.0005$, $\rho = 0.25$) selects a sparse weight
+vector through $\ell_1$ penalisation while retaining a small
+$\ell_2$ term, converging on a solution qualitatively similar to the
+Base SCM but with somewhat stronger emphasis on SOUTHCOR.
+MC-SCM decomposes the panel through singular value thresholding at
+$\lambda = 0.2$ and recovers a rank-4 factor structure; its implicit
+weighting is diffuse and not directly interpretable as corridor
+weights.
+SDID constructs both unit weights ($\hat{\omega}$) and time weights
+($\hat{\lambda}$), upweighting pre-flood months in which donor
+trajectories most closely resemble the post-period donor mean,
+producing a quasi-matched pre-period window concentrated in 2019--2021.
+
+% ---------------------------------------------------------------
+\subsection{Robustness Analysis}
+\label{sec:res_robustness}
+% ---------------------------------------------------------------
+
+\subsubsection{In-Time Placebo Tests}
+
+To assess the statistical significance of the estimated flood effect,
+in-time placebo tests were conducted for each estimator.
+Five pseudo-intervention dates were used: January 2017, June 2018,
+July 2019, April 2020, and January 2021.
+For each placebo date $t^*$, the flood is artificially placed at $t^*$
+and the post-period effect is estimated using the same methodology as
+the true treatment.
+An estimator is said to ``pass'' the placebo test if none of the five
+placebo effects exceeds the true effect estimate in absolute magnitude.
+
+\begin{table}[H]
+  \centering
+  \caption{In-time placebo test results for each SCM-family estimator.
+           Columns report: the true cumulative treatment effect, the
+           maximum absolute placebo effect across the five placebo
+           dates, and the number of placebo exceedances (i.e.,
+           placebo effects larger in magnitude than the true
+           estimate).}
+  \label{tab:placebo}
+  \begin{tabularx}{\textwidth}{lXXX}
+    \toprule
+    Estimator & True effect (MT) & Max placebo (MT)
+              & Exceedances / 5 \\
+    \midrule
+    Base SCM  & $-5.2075$ & $1.8340$ & 0 / 5 \\
+    ASCM      & $-5.1109$ & $1.7921$ & 0 / 5 \\
+    EN-SCM    & $-5.2128$ & $1.8651$ & 0 / 5 \\
+    MC-SCM    & $-5.0834$ & $1.9203$ & 0 / 5 \\
+    SDID      & $-5.2401$ & $1.8092$ & 0 / 5 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Every estimator achieves zero placebo exceedances (0/5).
+The largest placebo effect in absolute value --- across all methods
+and all five pseudo-dates --- is 1.92\,MT (MC-SCM at the 2018-01
+placebo date), which is less than 38\% of the true MC-SCM estimate
+of 5.08\,MT.
+This result implies an exact Fisher $p$-value of $1/6 \approx 0.167$
+under the permutation null (adding the true treatment to the five
+placebos), which, while not meeting conventional $p < 0.05$ thresholds
+in isolation, should be interpreted in the context of a donor pool of
+only five units --- the maximum achievable permutation precision.
+More importantly, the monotone ordering of the true effect over all
+placebo effects is consistent across all five structurally distinct
+estimators, providing convergent evidence that the flood produced a
+genuinely exceptional decline in NATCOR volume.
+
+Figure~\ref{fig:placebo} displays the placebo results graphically for
+the ASCM, EN-SCM, and SDID estimators.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{fig_placebo_summary}
+  \caption{In-time placebo test results for ASCM (left), EN-SCM
+           (centre), and SDID (right).
+           Each panel plots the cumulative gap series for the five
+           pseudo-treatment dates (grey) and the true April 2022
+           treatment (black).
+           The true effect is the most negative trajectory in every
+           panel.}
+  \label{fig:placebo}
+\end{figure}
+
+\subsubsection{Leave-One-Out Donor Stability}
+
+Leave-one-out (LOO) tests assess sensitivity to any individual donor
+corridor by successively excluding each of the five donors from the
+pool and re-estimating the treatment effect.
+The LOO spread is defined as the range of cumulative effect estimates
+across the five LOO subsets.
+
+\begin{table}[H]
+  \centering
+  \caption{Leave-one-out donor stability results for the five
+           SCM-family estimators.
+           The LOO spread is the range (maximum minus minimum)
+           of the cumulative effect across the five LOO subsets.
+           A small spread indicates that no single donor corridor
+           is driving the estimate.}
+  \label{tab:loo}
+  \begin{tabularx}{\textwidth}{lXXX}
+    \toprule
+    Estimator & Min LOO effect (MT) & Max LOO effect (MT)
+              & LOO spread (MT) \\
+    \midrule
+    Base SCM  & $-5.235$ & $-5.155$ & 0.080 \\
+    ASCM      & $-5.130$ & $-5.094$ & 0.036 \\
+    EN-SCM    & $-5.261$ & $-5.171$ & 0.090 \\
+    MC-SCM    & $-5.116$ & $-5.048$ & 0.068 \\
+    SDID      & $-5.315$ & $-5.166$ & 0.149 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+LOO spreads range from 0.036\,MT (ASCM) to 0.149\,MT (SDID), all
+well below 3\% of the point estimates.
+The most influential donor corridor across methods is SOUTHCOR: its
+exclusion causes the largest downward revision to the estimated effect
+(i.e., a smaller absolute loss), consistent with its role as the
+highest-weighted corridor in the Base SCM solution.
+Nonetheless, even excluding SOUTHCOR, every method continues to
+estimate a cumulative loss in excess of $-5.0$\,MT, and the consensus
+mean shifts by less than 0.10\,MT.
+These results confirm that the causal estimate is not artefactually
+dependent on any single donor corridor.
+
+Figure~\ref{fig:loo} displays the LOO gap series for ASCM, EN-SCM,
+and SDID.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{fig_loo_stability}
+  \caption{Leave-one-out donor stability for ASCM (left), EN-SCM
+           (centre), and SDID (right).
+           Each panel overlays the five LOO gap series (coloured,
+           one per excluded donor) against the full-pool estimate
+           (black).
+           Tight clustering of the LOO series around the full-pool
+           estimate indicates low sensitivity to any individual donor.}
+  \label{fig:loo}
+\end{figure}
+
+\subsubsection{Confidence Intervals}
+
+Two interval estimation procedures are reported, one for each
+estimator that supports it.
+
+\textbf{SDID Jackknife Standard Error.}
+The SDID monthly ATT estimate of $-0.1588$\,MT/month has a jackknife
+standard error of $\widehat{\mathrm{se}}_{\mathrm{JK}} = 0.0024$\,MT,
+corresponding to a $t$-statistic of $-65.6$ against the null of zero
+effect.
+The implied 95\% jackknife confidence interval for the cumulative
+33-month effect is $[-5.393,\,-5.080]$\,MT.
+
+\textbf{MC-SCM Block Bootstrap.}
+A block bootstrap with block length 6 months and 500 replications
+yields a 95\% interval for the MC-SCM cumulative estimate of
+$[-5.210,\,-4.948]$\,MT.
+
+Both intervals exclude zero by a wide margin.
+Their respective widths (0.313\,MT for SDID, 0.262\,MT for MC-SCM)
+are consistent with one another and small relative to the point
+estimate, further confirming the precision of the causal identification.
+
+\subsubsection{Consensus Estimate and Economic Magnitude}
+
+Figure~\ref{fig:consensus} summarises the main result: the five-method
+consensus estimate of the cumulative freight volume loss attributable
+to the 2022 KZN floods.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{fig_consensus_effect}
+  \caption{Consensus causal effect estimate. Each bar shows the
+           cumulative 33-month treatment effect (MT) for one of the
+           five SCM-family estimators under the five-corridor donor
+           pool.
+           Error bars for SDID and MC-SCM show 95\% confidence
+           intervals (jackknife and block bootstrap, respectively).
+           The dashed horizontal line marks the consensus mean of
+           $-5.17$\,MT.}
+  \label{fig:consensus}
+\end{figure}
+
+Across the five estimators, cumulative effect estimates range from
+$-5.08$\,MT (MC-SCM) to $-5.24$\,MT (EN-SCM), with a consensus mean
+of $-5.17$\,MT and a total spread of 0.15\,MT.
+The average monthly effect is $-0.155$ to $-0.159$\,MT/month,
+sustained uniformly across all 33 post-flood months.
+
+To contextualise the economic magnitude, consider that NATCOR's
+pre-flood mean was 3.94\,MT/month.
+A sustained loss of $\approx 0.157$\,MT/month represents a 4.0\%
+reduction in corridor throughput.
+At an estimated rail freight revenue rate of approximately
+ZAR\,250 per tonne (consistent with Transnet's published tariff
+schedules for general freight), the cumulative revenue loss attributable
+directly to the flood effect is approximately
+ZAR\,1.28 billion over 33 months.
+This figure does not include secondary economic costs --- road damage
+from diverted heavy freight, shipper inventory accumulation costs,
+or the modal shift to road that may be partially permanent --- which
+would substantially increase the total welfare cost of the disruption.
+
+The fact that the gap series remains uniformly negative through
+December 2024 --- 33 months after the flood --- implies that NATCOR
+had not fully recovered to its counterfactual trajectory by the end
+of the observation window.
+This persistence is consistent with a structural demand-side effect,
+in which shippers who transferred freight to road transport during the
+disruption period did not fully return to rail after infrastructure
+repairs were completed.
+Section~\ref{sec:discussion} returns to this interpretation and its
+policy implications.

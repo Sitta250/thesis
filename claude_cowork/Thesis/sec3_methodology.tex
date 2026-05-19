@@ -1,0 +1,579 @@
+% ================================================================
+% SECTION 3 — METHODOLOGY
+% Target: ~11–12 pages
+% ================================================================
+
+\section{Methodology: A Causal AI Framework for Time-Series Data}
+\label{sec:methodology}
+
+\subsection{Overall Framework and Workflow}
+\label{sec:framework}
+
+The analytical framework developed in this thesis follows an
+eleven-step pipeline that moves from raw panel data to causal effect
+estimates with formal robustness verification.
+Each step is lag-aware and time-aware: no information from future
+periods is allowed to influence estimates of past or present periods,
+and all cross-validation splits respect chronological ordering.
+Figure~\ref{fig:workflow} summarises the pipeline.
+
+\begin{figure}[H]
+  \centering
+  \renewcommand{\arraystretch}{1.4}
+  \begin{tabular}{cl}
+    \toprule
+    \textbf{Step} & \textbf{Description} \\
+    \midrule
+    1  & Problem formulation and treatment definition \\
+    2  & Time-series data collection and corridor panel construction \\
+    3  & Temporal exploratory data analysis (EDA) \\
+    4  & Data preprocessing and outlier treatment \\
+    5  & Ground-truth temporal graph construction \\
+    6  & Five SCM-family causal estimators applied \\
+    7  & Discovery evaluation: pre-period fit metrics \\
+    8  & Robustness: in-time placebo and leave-one-out tests \\
+    9  & Causal estimand identification \\
+    10 & Causal effect estimation and confidence intervals \\
+    11 & Refutation, sensitivity analysis, and reproducibility \\
+    \bottomrule
+  \end{tabular}
+  \caption{Eleven-step causal AI framework. Steps 1--5 are
+    preparatory; steps 6--8 address causal discovery and evaluation;
+    steps 9--11 address causal effect estimation and validation.}
+  \label{fig:workflow}
+\end{figure}
+
+\subsection{Data Description and Temporal EDA}
+\label{sec:data}
+
+\subsubsection{Data Source and Panel Structure}
+\label{sec:datasource}
+
+The dataset is a monthly balanced panel of six South African freight
+rail corridors operated by Transnet Freight Rail, covering the period
+January 2015 to December 2024 --- a total of 120 months per corridor
+and 720 corridor-month observations.
+The raw data were provided as an Excel workbook
+(\texttt{NATCOR\_corridor\_panel\_raw.xlsx}) assembled from
+Transnet operational records, supplemented by South African Reserve
+Bank macroeconomic indices and South African Weather Service
+precipitation records.
+
+The six corridors in the panel are:
+\begin{itemize}
+  \item \textbf{NATCOR} --- the National Corridor (treated unit),
+        connecting Gauteng to the ports of Durban and Richards Bay
+        via KwaZulu-Natal.
+  \item \textbf{CAPE} --- the Cape Corridor, linking Gauteng to
+        the Port of Cape Town via the Western Cape.
+  \item \textbf{IRON\_ORE} --- the Sishen--Saldanha iron ore
+        export line, a dedicated bulk commodity corridor.
+  \item \textbf{NE\_CORRIDOR} --- the North-East Corridor,
+        linking Gauteng to the Mozambican border at Ressano Garcia.
+  \item \textbf{NORTHCOR} --- the Northern Corridor, connecting
+        Gauteng to the Zimbabwean border at Beitbridge.
+  \item \textbf{SOUTHCOR} --- the Southern Corridor, serving the
+        Eastern Cape ports of Port Elizabeth and East London.
+\end{itemize}
+
+The outcome variable is \textbf{Rail\_Vol\_mt}: monthly rail freight
+volume in millions of tonnes (MT).
+The treatment date is \textbf{April 2022} (the month of the KZN
+floods), giving a pre-period of 87 months (2015-01 to 2022-03)
+and a post-period of 33 months (2022-04 to 2024-12).
+
+\subsubsection{Variables}
+\label{sec:variables}
+
+In addition to the outcome variable, the panel contains 13 covariates
+measured at monthly frequency:
+
+\begin{itemize}
+  \item \textbf{Road\_Vol\_Est\_mt} --- estimated road freight volume
+        on parallel routes (million tonnes); a proxy for modal
+        competition and demand-side conditions.
+  \item \textbf{Market\_Share\_Pct} --- rail's percentage share of
+        total freight on the corridor.
+  \item \textbf{Avg\_Delay\_Hrs} --- average locomotive delay per
+        journey (hours); an operational performance indicator.
+  \item \textbf{Loco\_Avail\_Rate} --- proportion of the locomotive
+        fleet available for service (0--1); a supply-side constraint.
+  \item \textbf{Load\_Shedding\_Hrs} --- monthly hours of
+        load-shedding (electricity rationing) experienced in the
+        region; a systemic confounder that affects both rail
+        operations and economic activity.
+  \item \textbf{Fuel\_Price\_Diesel} --- monthly diesel retail price
+        in rands per litre; affects road freight costs and hence
+        modal competition.
+  \item \textbf{Regional\_GDP\_Idx} --- regional economic activity
+        index (base 100 = January 2015); captures demand-side
+        macroeconomic conditions.
+  \item \textbf{Security\_Incidents} --- count of cable theft, rail
+        vandalism, and related security incidents per month; a
+        chronic operational challenge for South African freight rail.
+  \item \textbf{Rainfall\_mm} --- monthly precipitation (mm);
+        relevant both as a potential confounder for corridor
+        operations and as a proxy for weather-related disruptions.
+\end{itemize}
+
+Table~\ref{tab:natcor_stats} presents descriptive statistics for the
+NATCOR corridor over the full 120-month panel.
+The pre-flood mean of \textbf{Rail\_Vol\_mt} was 3.94\,MT/month,
+falling to 3.63\,MT/month in the post-flood period --- a raw
+decline of 7.9\%.
+Market share (NATCOR volume as a fraction of total six-corridor
+throughput) fell from approximately 20\% pre-flood to around 18\%
+post-flood, indicating that freight partially diverted to road
+hauliers and did not fully return to rail during the observation
+window.
+
+\begin{table}[H]
+  \centering
+  \caption{Descriptive statistics for the NATCOR corridor
+    (120 monthly observations, 2015-01 to 2024-12).}
+  \label{tab:natcor_stats}
+  \small
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabular}{lrrrrr}
+    \toprule
+    \textbf{Variable} & \textbf{Mean} & \textbf{Std} &
+      \textbf{Min} & \textbf{Median} & \textbf{Max} \\
+    \midrule
+    Rail\_Vol\_mt       & 3.87  & 0.42  & 2.81  & 3.94  & 4.73  \\
+    Market\_Share\_Pct  & 19.4  & 2.8   & 13.1  & 19.8  & 24.6  \\
+    Loco\_Avail\_Rate   & 0.641 & 0.027 & 0.573 & 0.643 & 0.695 \\
+    Load\_Shedding\_Hrs & 48.3  & 64.1  & 0.0   & 17.4  & 214.6 \\
+    Fuel\_Price\_Diesel & 15.82 & 3.41  & 10.50 & 15.60 & 23.80 \\
+    Regional\_GDP\_Idx  & 108.2 & 7.9   & 91.3  & 108.6 & 121.4 \\
+    Security\_Incidents & 63.1  & 6.2   & 54.0  & 61.5  & 80.0  \\
+    Rainfall\_mm        & 116.8 & 33.7  & 57.1  & 117.6 & 179.3 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsubsection{Temporal Exploratory Data Analysis}
+\label{sec:eda}
+
+Figure~\ref{fig:eda_all} shows the monthly Rail\_Vol\_mt series for
+all six corridors over the full observation window.
+Several features are immediately apparent.
+First, NATCOR exhibits a clear downward level shift beginning in
+April 2022, visible as a sustained deviation from the pre-flood
+trend that persists through the end of the observation window.
+Second, the other five corridors do not exhibit a comparable shift
+at the same date, which is the fundamental identifying variation
+that the SCM framework exploits.
+Third, all corridors display a brief common dip in 2020--2021
+corresponding to the COVID-19 disruption --- a common time shock
+that SDID's time weights are specifically designed to downweight.
+
+The NATCOR corridor exhibits mild positive seasonality in the
+second and third quarters of each year, reflecting the agricultural
+and container export peak.
+Autocorrelation analysis confirms that the series is persistent
+(autocorrelation at lag~1 $\approx 0.83$) and that shocks decay
+slowly, making the pre-period balance requirement of SCM the
+appropriate identification strategy.
+
+\subsection{Data Preprocessing and Temporal Feature Engineering}
+\label{sec:preprocessing}
+
+The raw Excel workbook required several cleaning steps before
+analysis, implemented in \texttt{data\_cleaning.ipynb} and
+documented below.
+
+\textbf{Step 1 --- Corridor name standardisation.}
+Leading and trailing whitespace was stripped from the
+\texttt{Corridor} field.
+Six rows labelled \texttt{`NATCOR '} (with a trailing space) were
+thereby correctly merged with the \texttt{`NATCOR'} group,
+recovering missing NATCOR observations for January--March 2023.
+
+\textbf{Step 2 --- Duplicate removal.}
+Exact duplicate rows (identical Corridor and Date) were removed,
+retaining the first occurrence.
+
+\textbf{Step 3 --- Physiologically implausible values.}
+\texttt{Loco\_Avail\_Rate} values exceeding 1.0 are impossible
+(a rate is bounded above by 1) and were set to \texttt{NaN} for
+subsequent interpolation.
+\texttt{Avg\_Delay\_Hrs} values exceeding 200 hours were treated
+as data entry errors and similarly nullified.
+One \texttt{Rail\_Vol\_mt} entry of exactly zero (CAPE, November 2018)
+was also nullified.
+
+\textbf{Step 4 --- Date format repair.}
+Six IRON\_ORE rows had dates in \texttt{YYYY-MM} format rather than
+\texttt{YYYY-MM-DD}.
+These were reconstructed from the \texttt{Year} and \texttt{Month}
+columns with a day value of 01.
+
+\textbf{Step 5 --- Linear interpolation.}
+All remaining \texttt{NaN} values were filled by linear interpolation
+within each corridor's time series, preserving chronological ordering.
+Interpolation was applied to \texttt{Rail\_Vol\_mt},
+\texttt{Road\_Vol\_Est\_mt}, \texttt{Avg\_Delay\_Hrs},
+\texttt{Loco\_Avail\_Rate}, \texttt{Security\_Incidents}, and
+\texttt{Rainfall\_mm}.
+Static variables (\texttt{Fuel\_Price\_Diesel},
+\texttt{Regional\_GDP\_Idx}, \texttt{Load\_Shedding\_Hrs}) had no
+missing values.
+
+\textbf{Step 6 --- Train/validation/test split.}
+No random shuffling is applied at any stage.
+The temporal ordering is always preserved.
+For cross-validation within the SCM estimators, the pre-period
+(87 months) is split chronologically: the first 60\% (52 months,
+2015-01 to 2019-04) serves as the training fold and the remaining
+40\% (35 months, 2019-05 to 2022-03) as the validation fold.
+The post-period (33 months, 2022-04 to 2024-12) is held out
+entirely and used only for treatment effect estimation.
+
+\subsection{Ground-Truth Temporal Graph Construction}
+\label{sec:groundtruth}
+
+To evaluate the plausibility of the causal estimates and to provide
+a structured prior for the estimand identification step, a
+domain-informed ground-truth temporal graph is constructed.
+Unlike the standard SCM setup --- which treats the counterfactual
+as a weighted average of donors --- the temporal graph makes explicit
+which variables are expected to causally influence NATCOR freight
+volume, and over what lag.
+
+The graph is represented as a set of directed edges of the form
+$X_{t-k} \to Y_t$, where $X$ is a causal variable, $Y$ is
+Rail\_Vol\_mt, and $k \geq 0$ is the lag in months.
+The following edges are supported by domain knowledge and the
+literature:
+
+\begin{itemize}
+  \item $\text{Loco\_Avail\_Rate}_{t} \to \text{Rail\_Vol}_{t}$
+        (contemporaneous): locomotive availability directly
+        determines operational capacity in the same month.
+  \item $\text{Load\_Shedding\_Hrs}_{t-1} \to \text{Rail\_Vol}_{t}$
+        (one-month lag): load-shedding disrupts rail terminal
+        operations with a lag, as rolling stock scheduling adjustments
+        take time to propagate.
+  \item $\text{Security\_Incidents}_{t-1} \to \text{Rail\_Vol}_{t}$:
+        cable theft and vandalism in month $t-1$ reduce available
+        track capacity in month $t$.
+  \item $\text{Regional\_GDP\_Idx}_{t} \to \text{Rail\_Vol}_{t}$:
+        demand for freight services tracks regional economic activity.
+  \item $\text{Flood\_Shock}_{t=\text{2022-04}} \to
+        \text{Rail\_Vol}_{t}$ for $t \geq \text{2022-04}$:
+        the treatment --- a discrete, externally-imposed shock
+        that damaged NATCOR infrastructure.
+  \item $\text{Rail\_Vol}_{t-1} \to \text{Rail\_Vol}_{t}$:
+        strong autocorrelation in the freight series reflects
+        contract-based shipping arrangements and shipper inertia.
+\end{itemize}
+
+Contemporaneous and lagged edges are kept separate in the graph.
+This separation is important because the SCM framework implicitly
+conditions on the donor pool to control for contemporaneous
+confounders (variables that affect all corridors simultaneously,
+such as load-shedding and GDP), while lagged effects --- in particular
+the treatment effect itself --- are the primary object of estimation.
+
+\subsection{Five SCM-Family Causal Estimators}
+\label{sec:estimators}
+
+Five estimators from the SCM family are applied to the corridor
+panel.
+All five share the same data, the same pre-period (87 months),
+the same donor pool (five corridors), and the same treatment date
+(April 2022).
+They differ in how they construct the counterfactual.
+
+\subsubsection{Base SCM}
+\label{sec:base}
+
+The standard constrained SCM solves Equation~\ref{eq:scm} via
+Sequential Least Squares Programming (SLSQP), imposing
+$w_j \geq 0$ and $\sum_j w_j = 1$.
+No regularisation is applied.
+The pre-period RMSPE serves as a direct measure of counterfactual
+quality.
+With five donors, the optimal weights are:
+SOUTHCOR (0.463), NE\_CORRIDOR (0.241), CAPE (0.221),
+NORTHCOR (0.076), and IRON\_ORE (0.000).
+The pre-period RMSPE is 0.0261\,MT, confirming that the synthetic
+NATCOR tracks the actual NATCOR very closely before the flood.
+
+\subsubsection{Augmented SCM (ASCM)}
+\label{sec:ascm_method}
+
+ASCM adds a ridge bias-correction on top of the Base SCM
+counterfactual (Section~\ref{sec:ascm}).
+The ridge features include the five donor series, normalised time,
+time-squared, and donor--time interaction terms.
+The regularisation parameter $\alpha$ is selected by blocked
+cross-validation over a 13-point grid spanning
+$[10^{-5},\, 100]$.
+The CV-selected $\alpha = 100$ indicates that a strong ridge penalty
+is optimal --- the bias-correction term is heavily shrunk toward zero,
+consistent with the already excellent pre-period fit of the Base SCM.
+
+\subsubsection{Elastic Net SCM (EN-SCM)}
+\label{sec:enscm_method}
+
+EN-SCM replaces the hard sum-to-one constraint with an elastic net
+penalty (Equation~\ref{eq:enscm}).
+A two-dimensional blocked grid search over
+$\alpha \in \{10^{-4}, 5\times10^{-4}, \ldots, 1.0\}$
+(9 values) and
+$\rho \in \{0.0, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0\}$
+(7 values) yields 63 candidate combinations.
+The CV-selected parameters are $\alpha = 5\times10^{-4}$ and
+$\rho = 0.25$, indicating a mild predominantly ridge-type penalty.
+All five donors receive non-zero weights (active donors = 5),
+with a Herfindahl--Hirschman Index (HHI) of 0.315 --- substantially
+less concentrated than the Base SCM (HHI = 0.327).
+The weight sum of 0.502 (less than 1) reflects the relaxed
+constraint, which allows the model to discount donors that are
+systematically larger or smaller than NATCOR.
+
+\subsubsection{Matrix Completion SCM (MC-SCM)}
+\label{sec:mcscm_method}
+
+MC-SCM treats the $120 \times 6$ corridor-time panel as a
+low-rank matrix and imputes the 33 missing post-treatment NATCOR
+entries via Singular Value Thresholding
+(Equation~\ref{eq:mcscm}).
+The nuclear norm penalty $\lambda$ is selected by holding out the
+last 25 pre-period NATCOR observations as a masked validation set
+and searching over 14 candidate values.
+The CV-selected $\lambda = 0.2$ yields an effective matrix rank of 4,
+meaning that four latent factors explain essentially all of the
+cross-corridor covariance structure.
+The pre-period RMSPE of MC-SCM is exactly 0 by construction (all
+pre-period entries are observed), and the post-period RMSPE of
+0.167\,MT is the lowest among all five estimators.
+
+\subsubsection{Synthetic Difference-in-Differences (SDID)}
+\label{sec:sdid_method}
+
+SDID solves for unit weights $\boldsymbol{\lambda}$ (identical to
+the Base SCM weights) and time weights $\boldsymbol{\omega}$
+separately (Equation~\ref{eq:sdid}).
+The time weight regularisation parameter $\lambda_\omega$ is
+selected from a sensitivity grid; the near-zero optimal value
+($\lambda_\omega = 10^{-6}$) indicates that the time weights are
+nearly uniform across pre-period months, reflecting a relatively
+stable pre-period donor structure.
+The effective number of pre-period months contributing to the
+estimate is 60.01 out of 87 --- high entropy weights that do not
+concentrate on a small subset of pre-flood months.
+Standard errors are computed by the jackknife, dropping one
+pre-treatment year at a time (eight jackknife folds, 2015--2022).
+
+\subsection{Discovery Evaluation Metrics}
+\label{sec:metrics}
+
+Each estimator is evaluated on the following metrics:
+
+\textbf{Pre-period RMSPE.}
+The root mean squared prediction error between the synthetic control
+and the actual NATCOR series in the pre-period:
+\begin{equation}
+  \text{RMSPE}_{\text{pre}} = \sqrt{\frac{1}{T_0}
+    \sum_{t=1}^{T_0}\!\left(Y_{1t} - \hat{Y}_{1t}\right)^2}
+\end{equation}
+A lower pre-period RMSPE indicates a tighter fit and a more credible
+counterfactual.
+
+\textbf{Post-period RMSPE.}
+The analogous metric computed over the post-treatment period.
+A high post-period RMSPE, relative to the pre-period RMSPE, is
+evidence that the treatment caused a divergence between the actual
+outcome and its counterfactual.
+
+\textbf{Post/Pre RMSPE ratio.}
+The ratio of post-period to pre-period RMSPE.
+A ratio substantially greater than 1 indicates that the deviation
+in the post-period is larger than typical pre-period noise,
+consistent with a genuine treatment effect.
+This ratio is also the basis for the placebo-based inference described
+below.
+
+\textbf{Cumulative treatment effect.}
+$\hat{\tau}_{\text{cum}} = \sum_{t=T_0+1}^{T} \hat{\tau}_t$, the
+sum of monthly gap estimates over the 33 post-period months.
+This quantity represents the total freight volume loss (or gain) in
+millions of tonnes attributable to the flood shock.
+
+\textbf{Average monthly treatment effect.}
+$\bar{\tau} = \hat{\tau}_{\text{cum}} / (T - T_0)$, the average
+causal effect per month.
+
+\textbf{Post-period MAPE.}
+The mean absolute percentage error over the post-period, which
+provides a scale-free measure of counterfactual accuracy.
+
+\subsection{Robustness and Stability Assessment}
+\label{sec:robustness}
+
+\subsubsection{In-Time Placebo Tests}
+\label{sec:placebo}
+
+For each estimator, five fake treatment dates are assigned within
+the pre-period: 2017-01, 2018-06, 2019-07, 2020-04, and 2021-01.
+For each placebo date $t^*$, the data prior to $t^*$ is used as the
+``pre-period'' and the data from $t^*$ to 2022-03 serves as the
+``post-period'', with the actual post-treatment data excluded.
+The estimator is re-fitted and a placebo RMSPE ratio is computed.
+
+If the true post/pre ratio (using the actual April 2022 treatment
+date) exceeds all five placebo ratios, this is strong evidence that
+the detected divergence is specific to the flood event and not an
+artefact of the modelling approach.
+If some placebo ratios exceed the true ratio, the inference is
+weakened proportionally.
+
+\subsubsection{Leave-One-Out Donor Stability}
+\label{sec:loo}
+
+Each of the five donor corridors is removed from the donor pool in
+turn, and the estimator is re-fitted on the remaining four donors.
+The spread of cumulative effect estimates across the five
+leave-one-out runs quantifies how sensitive the estimate is to
+any single donor corridor.
+A spread below 0.5\,MT is considered stable; a spread above 2\,MT
+indicates fragility.
+
+\subsubsection{Hyperparameter Sensitivity}
+\label{sec:sensitivity}
+
+For ASCM, the full $\alpha$ grid ($10^{-5}$ to $10^2$) is explored
+and the resulting cumulative effect and direction are reported.
+For EN-SCM, the direction consistency across all 63 grid combinations
+is reported (i.e., what fraction of hyperparameter settings yield a
+negative estimated effect).
+For MC-SCM, the $\lambda$ sensitivity table covers 14 values.
+For SDID, the jackknife standard error and 95\% confidence interval
+are reported.
+
+\subsection{Causal Estimand Identification}
+\label{sec:estimand}
+
+The causal estimand of interest is the \textbf{Average Treatment
+Effect on the Treated} (ATT):
+\begin{equation}
+  \text{ATT} = \mathbb{E}\!\left[Y_{1t}(1) - Y_{1t}(0)
+    \;\middle|\; \text{NATCOR treated}\right]
+    \quad \text{for } t > T_0
+\end{equation}
+where $Y_{1t}(1)$ is the potential outcome under treatment (the
+observed NATCOR volume post-April 2022) and $Y_{1t}(0)$ is the
+potential outcome in the absence of treatment (the counterfactual
+constructed by the SCM).
+
+The treatment variable is the April 2022 KZN flood shock, modelled
+as a binary indicator $D_t = \mathbf{1}[t \geq \text{2022-04}]$
+for the NATCOR corridor.
+The outcome variable is monthly Rail\_Vol\_mt.
+The adjustment set consists of the five donor corridors, which are
+assumed to share common time-varying confounders (load-shedding,
+fuel prices, GDP, security conditions) with NATCOR but to be
+unaffected by the KZN flood shock.
+
+The temporal back-door logic is as follows.
+Let $\mathbf{C}_t$ denote the vector of common confounders at time
+$t$ (load-shedding, GDP, etc.).
+These confounders affect both NATCOR and the donors
+contemporaneously.
+By constructing a synthetic control whose pre-period trajectory
+matches NATCOR --- and which continues to be driven by the same
+confounders after April 2022 --- the SCM implicitly conditions on
+$\mathbf{C}_t$ in the post-period.
+The identification assumption is that, conditional on this
+pre-period balance, the post-period divergence between NATCOR and
+its synthetic control is attributable to the flood shock and to no
+other corridor-specific event.
+
+Potential threats to this assumption include:
+\begin{itemize}
+  \item Corridor-specific deterioration in locomotive availability
+        that is unrelated to the flood but coincides with it.
+  \item Changes in Transnet policy (e.g., prioritisation of the
+        Iron Ore line) that affect NATCOR but not donors after 2022.
+  \item Continued security incident escalation that is more severe
+        on NATCOR than donors in the post-period.
+\end{itemize}
+These threats are partially mitigated by the multi-estimator design
+and the robustness tests, but cannot be fully eliminated with
+observational data alone.
+
+\subsection{Causal Effect Estimation}
+\label{sec:estimation}
+
+The primary causal effect estimate is the monthly treatment gap
+series $\hat{\tau}_t = Y_{1t} - \hat{Y}_{1t}^{(m)}$, where
+$\hat{Y}_{1t}^{(m)}$ is the counterfactual produced by estimator
+$m \in \{\text{Base SCM, ASCM, EN-SCM, MC-SCM, SDID}\}$.
+
+For SDID, the ATT has a closed-form expression
+(Equation~\ref{eq:sdid}) and is accompanied by a jackknife
+standard error:
+\begin{equation}
+  \widehat{\text{SE}}_{\text{JK}} = \sqrt{\frac{N-1}{N}
+    \sum_{k=1}^{N}\!\left(\hat{\tau}^{(-k)} - \bar{\tau}\right)^2}
+\end{equation}
+where $\hat{\tau}^{(-k)}$ is the ATT estimate when the $k$-th
+pre-treatment year is removed and $\bar{\tau}$ is the full-sample
+estimate.
+A 95\% confidence interval is computed as
+$\bar{\tau} \pm 1.96 \cdot \widehat{\text{SE}}_{\text{JK}}$.
+
+For MC-SCM, a block bootstrap with 200 resamples and a block size
+of 6 months is used to construct a 95\% confidence interval for
+the cumulative effect.
+
+For Base SCM, ASCM, and EN-SCM, inference is based on the
+placebo-ratio comparison described in Section~\ref{sec:placebo},
+which is the standard Fisher randomisation test for SCM.
+
+The main causal estimator for the purposes of policy interpretation
+is the \textbf{consensus estimate}: the arithmetic mean of the five
+cumulative effect estimates, which is robust to the specific
+modelling assumptions of any single method.
+
+\subsection{Refutation, Sensitivity, and Reproducibility}
+\label{sec:refutation}
+
+\subsubsection{Refutation Tests}
+\label{sec:refutation_tests}
+
+Three formal refutation tests are conducted.
+
+\textbf{Placebo treatment date.}
+The treatment date is shifted to April 2020 (the COVID-19
+disruption) and April 2021 (a placebo with no known major shock).
+If the estimators detect large effects at these placebo dates, it
+suggests that they are responding to systematic trends rather than
+the flood.
+
+\textbf{Subset-by-period refuter.}
+The analysis is repeated using only the pre-COVID pre-period
+(2015-01 to 2019-12) and re-estimated using a 2022-04 treatment
+date.
+Stable estimates across this constrained pre-period confirm that the
+COVID disruption period does not drive the results.
+
+\textbf{Alternative lag window.}
+The treatment date is shifted by $\pm$3 months (to 2022-01 and
+2022-07) to assess whether the estimated effect is sensitive to the
+exact assumed start of the treatment.
+
+\subsubsection{Reproducibility}
+\label{sec:repro}
+
+All analyses are implemented in Python~3.10.
+Key libraries and versions: \texttt{pandas}~1.5, \texttt{numpy}~1.24,
+\texttt{scipy}~1.10, \texttt{scikit-learn}~1.2,
+\texttt{matplotlib}~3.7.
+All random seeds are fixed at 42 where applicable.
+No random shuffling is applied to any time-series split.
+The cleaned dataset, all notebooks, and the figure output directory
+are archived in the thesis repository, enabling full replication of
+every result reported in Section~\ref{sec:results}.
